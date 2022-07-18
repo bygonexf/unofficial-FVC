@@ -5,9 +5,9 @@ This repository is built upon [CompressAI](https://github.com/InterDigitalInc/Co
 Please note that only the feature-sapce DCN part is implemented.
 
 ## TODO
-- [] implement the multi-frame fusion part
-- [] set GOP size in  args
-- [] modify the visualization code of DCN offsets
+- [ ] implement the multi-frame fusion part
+- [ ] set GOP size in  args
+- [ ] modify the visualization code of DCN offsets
 
 ## Setup
 
