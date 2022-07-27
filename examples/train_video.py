@@ -42,6 +42,7 @@ import torch.optim as optim
 
 from torch.utils.data import DataLoader
 from torchvision import transforms
+from torch.utils.tensorboard import SummaryWriter
 
 from compressai.datasets import VideoFolder
 import sys
@@ -150,21 +151,19 @@ class RateDistortionLoss(nn.Module):
         num_pixels = H * W * num_frames
 
         # Get scaled and raw loss distortions for each frame
-        scaled_distortions = []
         distortions = []
         for i, (x_hat, x) in enumerate(zip(output["x_hat"], target)):
-            scaled_distortion, distortion = self._get_scaled_distortion(x_hat, x)
+            _, distortion = self._get_scaled_distortion(x_hat, x)
 
             distortions.append(distortion)
-            scaled_distortions.append(scaled_distortion)
 
             if self.return_details:
                 out[f"frame{i}.mse_loss"] = distortion
         # aggregate (over batch and frame dimensions).
         out["mse_loss"] = torch.stack(distortions).mean()
-
+        
         # average scaled_distortions accros the frames
-        scaled_distortions = sum(scaled_distortions) / num_frames
+        distortions = sum(distortions) / num_frames
 
         assert isinstance(output["likelihoods"], list)
         likelihoods_list = output.pop("likelihoods")
@@ -179,9 +178,9 @@ class RateDistortionLoss(nn.Module):
         lambdas = torch.full_like(bpp_loss, self.lmbda)
 
         bpp_loss = bpp_loss.mean()
-        out["loss"] = (lambdas * scaled_distortions).mean() + bpp_loss
+        out["loss"] = (lambdas * distortions).mean() + bpp_loss
 
-        out["distortion"] = scaled_distortions.mean()
+        out["distortion"] = distortions.mean()
         out["bpp_loss"] = bpp_loss
         return out
 
@@ -248,7 +247,7 @@ def configure_optimizers(net, args):
 
 
 def train_one_epoch(
-    model, criterion, train_dataloader, optimizer, aux_optimizer, epoch, clip_max_norm
+    model, criterion, train_dataloader, optimizer, aux_optimizer, epoch, clip_max_norm, writer
 ):
     model.train()
     device = next(model.parameters()).device
@@ -280,6 +279,12 @@ def train_one_epoch(
                 f'\tBpp loss: {out_criterion["bpp_loss"].item():.2f} |'
                 f"\tAux loss: {aux_loss.item():.2f}"
             )
+            iter_now = epoch*(len(train_dataloader.dataset)/len(d)) + i
+            writer.add_scalar('loss', out_criterion["loss"], iter_now)
+            writer.add_scalar('loss_mse', out_criterion["mse_loss"], iter_now)
+            writer.add_scalar('loss_bpp', out_criterion["bpp_loss"], iter_now)
+            writer.add_scalar('loss_bpp_motion', out_criterion["bpp_loss.motion"], iter_now)
+            writer.add_scalar('loss_bpp_residual', out_criterion["bpp_loss.residual"], iter_now)
 
 
 def test_epoch(epoch, test_dataloader, model, criterion):
@@ -341,7 +346,7 @@ def parse_args(argv):
     parser.add_argument(
         "-lr",
         "--learning-rate",
-        default=1e-4,
+        default=5e-5,
         type=float,
         help="Learning rate (default: %(default)s)",
     )
@@ -356,7 +361,7 @@ def parse_args(argv):
         "--lambda",
         dest="lmbda",
         type=float,
-        default=1e-2,
+        default=256,
         help="Bit-rate distortion parameter (default: %(default)s)",
     )
     parser.add_argument(
@@ -464,6 +469,8 @@ def main(argv):
         aux_optimizer.load_state_dict(checkpoint["aux_optimizer"])
         lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
 
+    writer = SummaryWriter()
+    
     best_loss = float("inf")
     for epoch in range(last_epoch, args.epochs):
         print(f"Learning rate: {optimizer.param_groups[0]['lr']}")
@@ -475,6 +482,7 @@ def main(argv):
             aux_optimizer,
             epoch,
             args.clip_max_norm,
+            writer,
         )
         loss = test_epoch(epoch, test_dataloader, net, criterion)
         lr_scheduler.step(loss)
@@ -494,6 +502,8 @@ def main(argv):
                 },
                 is_best,
             )
+            
+    writer.close()
 
 
 if __name__ == "__main__":
