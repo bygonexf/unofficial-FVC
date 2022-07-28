@@ -12,7 +12,7 @@ Please note that only the feature-sapce DCN part is implemented.
 ## Setup
 
 ```
-pip install -r requirements.txt
+conda create --name <env> --file requirements.txt
 ```
 
 ## Run
