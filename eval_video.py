@@ -59,7 +59,7 @@ from src.transforms.functional import (
 from src.zoo import video_models as pretrained_models
 
 from src.models.google import FVC_base
-from src.zoo.image import model_architectures as image_architectures
+from src.zoo.image import cheng2020_anchor
 
 models = {"fvc": FVC_base}
 
@@ -446,16 +446,6 @@ def create_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parent_parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument(
-        "--i_frame_model_name",
-        default="cheng2020-anchor",
-        type=str
-    )
-    parser.add_argument(
-        "--i_frame_model_path",
-        type=str,
-        nargs='+'
-    )
     parent_parser.add_argument("dataset", type=str, help="sequences directory")
     parent_parser.add_argument("output", type=str, help="output directory")
     parent_parser.add_argument(
@@ -562,9 +552,6 @@ def main(args: Any = None) -> None:
         load_func = load_checkpoint
         log_fmt = "\rEvaluating {run:s}"
         
-    if not args.i_frame_model_path:
-        print("Error: missing i_frame_model_path.", file=sys.stderr)
-        raise SystemExit(1)
 
     results = defaultdict(list)
     for run in runs:
@@ -578,8 +565,7 @@ def main(args: Any = None) -> None:
             cpt_name = Path(run).name[: -len(".tar.pth")]  # removesuffix() python3.9
             trained_net = f"{cpt_name}-{description}"
         print(f"Using trained model {trained_net}", file=sys.stderr)
-        net_i_ckp = torch.load(args.i_frame_model_path, map_location=torch.device('cpu'))
-        net_i = image_architectures[args.i_frame_model_name].from_state_dict(net_i_ckp)
+        net_i = cheng2020_anchor(quality=3,metric="mse",pretrained=True)
         net_i.eval()
         if args.cuda and torch.cuda.is_available():
             model = model.to("cuda")

@@ -47,7 +47,6 @@ from torch.hub import load_state_dict_from_url
 
 from src.datasets import VideoFolder
 from src.models.fvc import FVC_base
-from src.zoo.image import model_architectures as image_architectures
 from src.zoo.image import cheng2020_anchor
 
 
@@ -336,18 +335,6 @@ def parse_args(argv):
     parser.add_argument(
         "-d", "--dataset", type=str, required=True, help="Training dataset"
     )
-    '''
-    parser.add_argument(
-        "--i_frame_model_name",
-        default="cheng2020-anchor",
-        type=str
-    )
-    parser.add_argument(
-        "--i_frame_model_path",
-        type=str,
-        nargs='+'
-    )
-    '''
     parser.add_argument(
         "-e",
         "--epochs",
