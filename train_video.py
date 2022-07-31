@@ -304,7 +304,8 @@ def test_epoch(epoch, test_dataloader, model, net_i, criterion):
     with torch.no_grad():
         for batch in test_dataloader:
             d = [frames.to(device) for frames in batch]
-            d[0] = net_i(d[0])
+            frame_i_out = net_i(d[0])
+            d[0] = frame_i_out["x_hat"]
             out_net = model(d)
             out_criterion = criterion(out_net, d)
 
