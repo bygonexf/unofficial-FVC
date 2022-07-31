@@ -22,7 +22,7 @@ conda create --name <env> --file requirements.txt
 Run the command in the project root directory.
 
 ```bash
-python train_video.py -d ${DATA_PATH} --epochs 100 --batch-size 16 -m fvc --cuda --save
+python train_video.py -d ${DATA_PATH} --epochs 100 --batch-size 4 --lambda 256 -lr 5e-5 --cuda --save
 ```
 
 ### Evaluation
