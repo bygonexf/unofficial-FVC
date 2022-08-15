@@ -48,7 +48,7 @@ from src.models.google import (
     MeanScaleHyperprior,
     ScaleHyperprior,
 )
-from src.zoo import load_state_dict
+from src.zoo.pretrained import load_pretrained as load_state_dict
 from src.zoo.image import model_architectures as zoo_models
 from src.models.fvc import FVC_base
 

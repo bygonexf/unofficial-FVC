@@ -451,7 +451,7 @@ class FVC_base(nn.Module):
             scale_table = get_scale_table()
             
 
-        updated |= self.res_hyperprior.gaussian_conditional.update_scale_table(
+        updated = self.res_hyperprior.gaussian_conditional.update_scale_table(
             scale_table, force=force
         )
         updated |= self.res_hyperprior.entropy_bottleneck.update(force=force)
