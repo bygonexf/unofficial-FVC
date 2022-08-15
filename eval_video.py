@@ -278,7 +278,7 @@ def eval_model(
 
             if i % gop_size == 0:
                 info = net_i.compress(x_cur)
-                x_rec = net_i.decompress(info["strings"], info["shape"])
+                x_rec = (net_i.decompress(info["strings"], info["shape"]))["x_hat"]
                 write_body(f, info["shape"], info["strings"])
             else:
                 x_rec, enc_info = net.encode_inter(x_cur, x_rec)
