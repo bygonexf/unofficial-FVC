@@ -56,7 +56,6 @@ from src.transforms.functional import (
     yuv_420_to_444,
     yuv_444_to_420,
 )
-from src.zoo import video_models as pretrained_models
 
 from src.models.google import FVC_base
 from src.zoo.image import cheng2020_anchor
@@ -434,12 +433,6 @@ def load_checkpoint(arch: str, checkpoint_path: str) -> nn.Module:
     return net
 
 
-def load_pretrained(model: str, metric: str, quality: int) -> nn.Module:
-    return pretrained_models[model](
-        quality=quality, metric=metric, pretrained=True
-    ).eval()
-
-
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Video compression network evaluation.",
@@ -541,16 +534,10 @@ def main(args: Any = None) -> None:
     outputdir = args.output
     Path(outputdir).mkdir(parents=True, exist_ok=True)
 
-    if args.source == "pretrained":
-        runs = sorted(args.qualities)
-        opts = (args.architecture, args.metric)
-        load_func = load_pretrained
-        log_fmt = "\rEvaluating {0} | {run:d}"
-    else:
-        runs = args.paths
-        opts = (args.architecture,)
-        load_func = load_checkpoint
-        log_fmt = "\rEvaluating {run:s}"
+    runs = args.paths
+    opts = (args.architecture,)
+    load_func = load_checkpoint
+    log_fmt = "\rEvaluating {run:s}"
         
 
     results = defaultdict(list)
@@ -559,11 +546,8 @@ def main(args: Any = None) -> None:
             sys.stderr.write(log_fmt.format(*opts, run=run))
             sys.stderr.flush()
         model = load_func(*opts, run)
-        if args.source == "pretrained":
-            trained_net = f"{args.architecture}-{args.metric}-{run}-{description}"
-        else:
-            cpt_name = Path(run).name[: -len(".tar.pth")]  # removesuffix() python3.9
-            trained_net = f"{cpt_name}-{description}"
+        cpt_name = Path(run).name[: -len(".tar.pth")]  # removesuffix() python3.9
+        trained_net = f"{cpt_name}-{description}"
         print(f"Using trained model {trained_net}", file=sys.stderr)
         net_i = cheng2020_anchor(quality=3,metric="mse",pretrained=True)
         net_i.eval()
