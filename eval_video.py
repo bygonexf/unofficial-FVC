@@ -57,7 +57,7 @@ from src.transforms.functional import (
     yuv_444_to_420,
 )
 
-from src.models.google import FVC_base
+from src.models.fvc import FVC_base
 from src.zoo.image import cheng2020_anchor
 
 models = {"fvc": FVC_base}
