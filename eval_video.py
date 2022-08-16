@@ -256,7 +256,8 @@ def eval_model(
 
     device = next(net.parameters()).device
     #TODO: can be changed
-    num_frames = len(org_seq)
+    #num_frames = len(org_seq)
+    num_frames = 50
     max_val = 2**org_seq.bitdepth - 1
     results = defaultdict(list)
     #TODO: can be changed
