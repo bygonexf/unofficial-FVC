@@ -556,6 +556,7 @@ def main(args: Any = None) -> None:
             net_i = net_i.to("cuda")
             if args.half:
                 model = model.half()
+                net_i.half()
                 
         args_dict = vars(args)
         metrics = run_inference(
