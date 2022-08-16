@@ -278,8 +278,10 @@ def eval_model(
             x_cur, padding = pad(x_cur)
 
             if i % gop_size == 0:
+                x_cur = x_cur.to("cpu") # autoregressive entropy encoder in cheng2020anchor works in a CPU sequential way
                 info = net_i.compress(x_cur)
                 x_rec = (net_i.decompress(info["strings"], info["shape"]))["x_hat"]
+                x_rec = x_rec.to(device)
                 write_body(f, info["shape"], info["strings"])
             else:
                 x_rec, enc_info = net.encode_inter(x_cur, x_rec)
@@ -557,7 +559,7 @@ def main(args: Any = None) -> None:
             #net_i = net_i.to("cuda")
             if args.half:
                 model = model.half()
-                #net_i.half()
+                net_i.half()
                 
         args_dict = vars(args)
         metrics = run_inference(
