@@ -554,10 +554,10 @@ def main(args: Any = None) -> None:
         net_i.eval()
         if args.cuda and torch.cuda.is_available():
             model = model.to("cuda")
-            net_i = net_i.to("cuda")
+            #net_i = net_i.to("cuda")
             if args.half:
                 model = model.half()
-                net_i.half()
+                #net_i.half()
                 
         args_dict = vars(args)
         metrics = run_inference(
