@@ -278,10 +278,14 @@ def eval_model(
             x_cur, padding = pad(x_cur)
 
             if i % gop_size == 0:
-                x_cur = x_cur.to("cpu") # autoregressive entropy encoder in cheng2020anchor works in a CPU sequential way
+                torch.set_deterministic(True)
+                torch.set_num_threads(1)
+                #x_cur = x_cur.to("cpu") # autoregressive entropy encoder in cheng2020anchor works in a CPU sequential way
                 info = net_i.compress(x_cur)
                 x_rec = (net_i.decompress(info["strings"], info["shape"]))["x_hat"]
-                x_rec = x_rec.to(device)
+                torch.set_deterministic(False)
+                torch.set_num_threads(36)
+                #x_rec = x_rec.to(device)
                 write_body(f, info["shape"], info["strings"])
             else:
                 x_rec, enc_info = net.encode_inter(x_cur, x_rec)
@@ -556,7 +560,7 @@ def main(args: Any = None) -> None:
         net_i.eval()
         if args.cuda and torch.cuda.is_available():
             model = model.to("cuda")
-            #net_i = net_i.to("cuda")
+            net_i = net_i.to("cuda")
             if args.half:
                 model = model.half()
                 net_i.half()
@@ -761,4 +765,8 @@ def makeColorwheel():
     return colorwheel
 
 if __name__ == "__main__":
+    torch.backends.cudnn.enabled = True
+    torch.backends.cudnn.benchmark = False
+    torch.manual_seed(0)
+    np.random.seed(seed=0)
     main(sys.argv[1:])
